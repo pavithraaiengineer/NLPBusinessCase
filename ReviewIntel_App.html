@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReviewIntel — Amazon Product Intelligence Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --brand: #0a0a0f;
+    --accent: #6c63ff;
+    --accent2: #00d9a5;
+    --accent3: #ff6b6b;
+    --accent4: #ffd166;
+    --surface: #111118;
+    --surface2: #1a1a26;
+    --surface3: #22223a;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #f0f0f8;
+    --text2: #9090b0;
+    --text3: #5a5a7a;
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-body);
+    background: var(--brand);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px;
+  }
+  .logo {
+    font-family: var(--font-display);
+    font-size: 1.2rem; font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #6c63ff, #00d9a5);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .logo span { -webkit-text-fill-color: var(--text); opacity: 0.4; font-weight: 400; }
+  .nav-tabs {
+    display: flex; gap: 4px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+  }
+  .nav-tab {
+    font-family: var(--font-body);
+    font-size: 0.78rem; font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 7px;
+    border: none; background: transparent;
+    color: var(--text2); cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .nav-tab:hover { color: var(--text); background: var(--surface3); }
+  .nav-tab.active { background: var(--accent); color: #fff; }
+  .nav-badge {
+    font-size: 0.65rem; background: var(--accent2);
+    color: var(--brand); padding: 2px 6px; border-radius: 20px;
+    font-weight: 700; margin-left: 4px;
+  }
+
+  /* ── PAGES ── */
+  .page { display: none; animation: fadeIn 0.3s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+  .page-header { margin-bottom: 2rem; }
+  .page-header h1 {
+    font-family: var(--font-display); font-size: 2rem; font-weight: 700;
+    letter-spacing: -0.04em; margin-bottom: 0.4rem;
+  }
+  .page-header p { color: var(--text2); font-size: 0.95rem; }
+  .accent { color: var(--accent); }
+  .accent2 { color: var(--accent2); }
+  .accent3 { color: var(--accent3); }
+
+  /* ── GRID ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+  @media (max-width: 768px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+  }
+  .card-title {
+    font-family: var(--font-display); font-size: 0.8rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--text3); margin-bottom: 1rem;
+  }
+
+  /* ── METRIC CARDS ── */
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+  }
+  .metric-label { font-size: 0.75rem; color: var(--text3); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  .metric-value { font-family: var(--font-display); font-size: 1.9rem; font-weight: 700; letter-spacing: -0.04em; }
+  .metric-delta { font-size: 0.75rem; margin-top: 0.3rem; }
+  .metric-delta.up { color: var(--accent2); }
+  .metric-delta.down { color: var(--accent3); }
+  .metric-delta.neutral { color: var(--text3); }
+
+  /* ── CHARTS ── */
+  .chart-wrap { position: relative; width: 100%; }
+
+  /* ── BADGES ── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 0.72rem; font-weight: 600;
+    padding: 3px 9px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .badge-pos { background: rgba(0,217,165,0.15); color: var(--accent2); }
+  .badge-neg { background: rgba(255,107,107,0.15); color: var(--accent3); }
+  .badge-neu { background: rgba(255,209,102,0.15); color: var(--accent4); }
+  .badge-cat { background: rgba(108,99,255,0.15); color: var(--accent); }
+
+  /* ── STAR RATING ── */
+  .stars { color: var(--accent4); letter-spacing: -2px; }
+
+  /* ── FORMS ── */
+  .form-group { margin-bottom: 1rem; }
+  .form-label { font-size: 0.8rem; color: var(--text2); margin-bottom: 0.4rem; display: block; }
+  .form-input {
+    width: 100%; background: var(--surface2);
+    border: 1px solid var(--border2); border-radius: var(--radius-sm);
+    color: var(--text); font-family: var(--font-body); font-size: 0.9rem;
+    padding: 10px 14px; transition: border 0.2s;
+    outline: none;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  select.form-input { cursor: pointer; }
+  textarea.form-input { resize: vertical; min-height: 90px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-body); font-size: 0.9rem; font-weight: 500;
+    padding: 10px 20px; border-radius: var(--radius-sm);
+    border: none; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #5a52dd; transform: translateY(-1px); }
+  .btn-secondary {
+    background: var(--surface2); color: var(--text);
+    border: 1px solid var(--border2);
+  }
+  .btn-secondary:hover { background: var(--surface3); }
+  .btn-success { background: var(--accent2); color: var(--brand); }
+  .btn-success:hover { opacity: 0.85; }
+
+  /* ── SEARCH BAR ── */
+  .search-wrap {
+    display: flex; gap: 0;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 12px; overflow: hidden;
+    margin-bottom: 2rem;
+  }
+  .search-wrap input {
+    flex: 1; background: transparent; border: none;
+    color: var(--text); font-family: var(--font-body); font-size: 1rem;
+    padding: 14px 18px; outline: none;
+  }
+  .search-wrap input::placeholder { color: var(--text3); }
+  .search-wrap button {
+    background: var(--accent); border: none; color: #fff;
+    font-family: var(--font-body); font-size: 0.9rem; font-weight: 500;
+    padding: 0 24px; cursor: pointer; transition: background 0.2s;
+  }
+  .search-wrap button:hover { background: #5a52dd; }
+
+  /* ── REVIEW CARDS ── */
+  .review-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+    transition: border-color 0.2s;
+  }
+  .review-card:hover { border-color: var(--border2); }
+  .review-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 0.6rem; flex-wrap: wrap; }
+  .review-author { font-size: 0.85rem; font-weight: 500; }
+  .review-date { font-size: 0.75rem; color: var(--text3); }
+  .review-text { font-size: 0.88rem; color: var(--text2); line-height: 1.65; }
+  .review-product { font-size: 0.75rem; color: var(--accent); margin-top: 0.5rem; }
+
+  /* ── CATEGORY SELECTOR ── */
+  .cat-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .cat-pill {
+    font-size: 0.8rem; font-weight: 500;
+    padding: 6px 16px; border-radius: 20px;
+    border: 1px solid var(--border2);
+    background: var(--surface2); color: var(--text2);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .cat-pill:hover { border-color: var(--accent); color: var(--accent); }
+  .cat-pill.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* ── SUMMARY ARTICLE ── */
+  .summary-article {
+    background: linear-gradient(135deg, var(--surface) 0%, rgba(108,99,255,0.06) 100%);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    margin-bottom: 1rem;
+  }
+  .summary-article h3 {
+    font-family: var(--font-display); font-size: 1.2rem; font-weight: 700;
+    letter-spacing: -0.03em; margin-bottom: 0.75rem;
+  }
+  .summary-article p { font-size: 0.88rem; color: var(--text2); line-height: 1.75; }
+  .product-rank {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem; margin: 0.6rem 0;
+  }
+  .rank-num {
+    font-family: var(--font-display); font-size: 1.5rem; font-weight: 800;
+    color: var(--accent); min-width: 32px; line-height: 1;
+  }
+  .rank-name { font-size: 0.9rem; font-weight: 500; margin-bottom: 3px; }
+  .rank-desc { font-size: 0.8rem; color: var(--text2); }
+
+  /* ── FILE UPLOAD ── */
+  .upload-zone {
+    border: 2px dashed var(--border2); border-radius: var(--radius);
+    padding: 3rem 2rem; text-align: center;
+    transition: border-color 0.2s; cursor: pointer;
+  }
+  .upload-zone:hover, .upload-zone.drag-over { border-color: var(--accent); }
+  .upload-icon { font-size: 2.5rem; margin-bottom: 1rem; color: var(--text3); }
+  .upload-zone h3 { font-family: var(--font-display); font-size: 1.1rem; margin-bottom: 0.4rem; }
+  .upload-zone p { font-size: 0.85rem; color: var(--text3); }
+  #fileInput { display: none; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar { background: var(--surface2); border-radius: 20px; height: 8px; overflow: hidden; margin: 0.5rem 0; }
+  .progress-fill { height: 100%; border-radius: 20px; transition: width 0.6s ease; }
+
+  /* ── SENTIMENT BAR ── */
+  .sentiment-bar { display: flex; height: 10px; border-radius: 20px; overflow: hidden; margin: 0.5rem 0; }
+  .sentiment-pos { background: var(--accent2); }
+  .sentiment-neu { background: var(--accent4); }
+  .sentiment-neg { background: var(--accent3); }
+
+  /* ── PRODUCT TABLE ── */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .data-table th {
+    text-align: left; padding: 10px 12px;
+    font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--text3); border-bottom: 1px solid var(--border);
+    font-weight: 600;
+  }
+  .data-table td {
+    padding: 10px 12px; border-bottom: 1px solid var(--border);
+    color: var(--text2);
+  }
+  .data-table tr:hover td { background: var(--surface2); }
+  .data-table td:first-child { color: var(--text); font-weight: 500; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 2rem; right: 2rem;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 12px 18px;
+    font-size: 0.85rem;
+    transform: translateY(100px); opacity: 0;
+    transition: all 0.3s;
+    z-index: 999;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .toast.show { transform: none; opacity: 1; }
+  .toast-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent2); flex-shrink: 0; }
+
+  /* ── DIVIDER ── */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+
+  /* ── TAG ── */
+  .tag {
+    display: inline-block; font-size: 0.7rem; font-weight: 600;
+    padding: 2px 8px; border-radius: 4px;
+    background: var(--surface3); color: var(--text3);
+    margin: 2px;
+  }
+
+  /* ── HERO (dashboard) ── */
+  .hero-bar {
+    background: linear-gradient(135deg, rgba(108,99,255,0.12) 0%, rgba(0,217,165,0.06) 100%);
+    border: 1px solid rgba(108,99,255,0.2);
+    border-radius: var(--radius);
+    padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 1rem;
+  }
+  .hero-bar h2 { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; letter-spacing: -0.03em; }
+  .hero-bar p { font-size: 0.85rem; color: var(--text2); margin-top: 4px; }
+  .live-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent2);
+    display: inline-block; margin-right: 6px;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+  /* ── RECENT REVIEW FEED ── */
+  .feed-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+    animation: slideIn 0.4s ease;
+  }
+  @keyframes slideIn { from { opacity:0; transform:translateX(-10px); } to { opacity:1; transform:none; } }
+  .feed-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .feed-text { font-size: 0.83rem; color: var(--text2); line-height: 1.55; }
+  .feed-meta { font-size: 0.72rem; color: var(--text3); margin-top: 4px; }
+
+  /* ── RESULTS ── */
+  .result-product {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .result-product h3 {
+    font-family: var(--font-display); font-size: 1.1rem; font-weight: 700;
+    letter-spacing: -0.03em; margin-bottom: 0.5rem;
+  }
+
+  /* ── WORD BAR ── */
+  .word-bar { display: flex; align-items: center; gap: 10px; margin: 4px 0; }
+  .word-label { font-size: 0.78rem; color: var(--text2); min-width: 100px; }
+  .word-track { flex: 1; background: var(--surface2); border-radius: 20px; height: 6px; overflow: hidden; }
+  .word-fill { height: 100%; border-radius: 20px; background: var(--accent); }
+  .word-count { font-size: 0.75rem; color: var(--text3); min-width: 30px; text-align: right; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state { text-align: center; padding: 3rem; color: var(--text3); }
+  .empty-state h3 { font-family: var(--font-display); font-size: 1.1rem; color: var(--text2); margin-bottom: 0.5rem; }
+  .empty-state p { font-size: 0.85rem; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">Review<span>Intel</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('dashboard')">Dashboard</button>
+    <button class="nav-tab" onclick="showPage('aggregator')">Live Feed <span class="nav-badge">LIVE</span></button>
+    <button class="nav-tab" onclick="showPage('upload')">CSV Analyser</button>
+    <button class="nav-tab" onclick="showPage('search')">Product Search</button>
+  </div>
+</nav>
+
+<!-- ════════════════ PAGE 1: DASHBOARD ════════════════ -->
+<div id="page-dashboard" class="page active">
+<div class="container">
+
+  <div class="hero-bar">
+    <div>
+      <h2>Marketing Intelligence Dashboard</h2>
+      <p>Real-time product sentiment across all categories · <span class="live-dot"></span>Updated just now</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <select class="form-input" style="width:auto;font-size:0.82rem" id="dashCatFilter" onchange="renderDashboard()">
+        <option value="all">All Categories</option>
+        <option value="audio">Audio & Headphones</option>
+        <option value="ebooks">E-Readers & Tablets</option>
+        <option value="batteries">Batteries & Power</option>
+        <option value="accessories">Accessories</option>
+        <option value="other">Other Electronics</option>
+      </select>
+      <button class="btn btn-primary" onclick="refreshDashboard()">↻ Refresh</button>
+    </div>
+  </div>
+
+  <!-- METRICS ROW -->
+  <div class="grid-4" style="margin-bottom:1rem">
+    <div class="metric-card">
+      <div class="metric-label">Total Reviews</div>
+      <div class="metric-value accent" id="m-total">94,823</div>
+      <div class="metric-delta up">↑ 12.4% this month</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Avg. Rating</div>
+      <div class="metric-value" id="m-rating">4.1 ★</div>
+      <div class="metric-delta up">↑ 0.2 vs last month</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Positive Sentiment</div>
+      <div class="metric-value accent2" id="m-pos">67.2%</div>
+      <div class="metric-delta up">↑ 3.1% this month</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Negative Alerts</div>
+      <div class="metric-value accent3" id="m-neg">18.4%</div>
+      <div class="metric-delta down">↑ 1.2% vs last month</div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW -->
+  <div class="grid-2" style="margin-bottom:1rem">
+    <div class="card">
+      <div class="card-title">Sentiment distribution</div>
+      <div class="chart-wrap" style="height:220px">
+        <canvas id="sentChart" role="img" aria-label="Doughnut chart showing sentiment: 67% positive, 15% neutral, 18% negative">Positive: 67%, Neutral: 15%, Negative: 18%</canvas>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:12px;font-size:0.75rem">
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#00d9a5;display:inline-block"></span>Positive 67%</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#ffd166;display:inline-block"></span>Neutral 15%</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#ff6b6b;display:inline-block"></span>Negative 18%</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Rating distribution</div>
+      <div class="chart-wrap" style="height:220px">
+        <canvas id="ratingChart" role="img" aria-label="Bar chart of star ratings 1 to 5">1★: 6%, 2★: 5%, 3★: 9%, 4★: 22%, 5★: 58%</canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:1rem">
+    <div class="card-title">Monthly review volume & avg sentiment score</div>
+    <div class="chart-wrap" style="height:200px">
+      <canvas id="trendChart" role="img" aria-label="Line chart of monthly review volume trend over 12 months">Trend data over 12 months</canvas>
+    </div>
+  </div>
+
+  <!-- CATEGORY BREAKDOWN -->
+  <div class="page-header" style="margin-top:2rem">
+    <h1 style="font-size:1.3rem">Category breakdown</h1>
+    <p>Sentiment performance per product cluster</p>
+  </div>
+
+  <div id="catBreakdown"></div>
+
+  <!-- TOP PRODUCTS TABLE -->
+  <div class="card" style="margin-top:1.5rem">
+    <div class="card-title">Top-rated products — all categories</div>
+    <table class="data-table" id="topTable">
+      <thead>
+        <tr>
+          <th>Product</th><th>Category</th><th>Rating</th><th>Reviews</th><th>Sentiment</th><th>Trend</th>
+        </tr>
+      </thead>
+      <tbody id="topTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- SUMMARY ARTICLES -->
+  <div class="page-header" style="margin-top:2rem">
+    <h1 style="font-size:1.3rem">AI-generated category summaries</h1>
+    <p>GPT/BART summarization output — one article per category</p>
+  </div>
+  <div id="summaryArticles"></div>
+
+</div>
+</div>
+
+<!-- ════════════════ PAGE 2: LIVE AGGREGATOR ════════════════ -->
+<div id="page-aggregator" class="page">
+<div class="container">
+
+  <div class="page-header">
+    <h1>Live Review <span class="accent">Aggregator</span></h1>
+    <p>Submit, browse, and track product reviews in real time</p>
+  </div>
+
+  <div class="grid-2">
+    <!-- SUBMIT FORM -->
+    <div>
+      <div class="card">
+        <div class="card-title">Submit a review</div>
+
+        <div class="form-group">
+          <label class="form-label">Your name</label>
+          <input class="form-input" id="rev-name" placeholder="e.g. Sarah M." type="text">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Product name</label>
+          <input class="form-input" id="rev-product" placeholder="e.g. Amazon Echo Dot 5th Gen" type="text">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Product category</label>
+          <select class="form-input" id="rev-category">
+            <option>Audio & Headphones</option>
+            <option>E-Readers & Tablets</option>
+            <option>Batteries & Power</option>
+            <option>Accessories</option>
+            <option>Other Electronics</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Star rating</label>
+          <select class="form-input" id="rev-rating">
+            <option value="5">★★★★★ 5 — Excellent</option>
+            <option value="4">★★★★☆ 4 — Good</option>
+            <option value="3">★★★☆☆ 3 — Average</option>
+            <option value="2">★★☆☆☆ 2 — Poor</option>
+            <option value="1">★☆☆☆☆ 1 — Terrible</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Review text</label>
+          <textarea class="form-input" id="rev-text" placeholder="Write your honest review here..."></textarea>
+        </div>
+
+        <button class="btn btn-primary" onclick="submitReview()" style="width:100%">Submit Review →</button>
+      </div>
+
+      <!-- LIVE STATS -->
+      <div class="card" style="margin-top:1rem">
+        <div class="card-title">Live session stats</div>
+        <div class="grid-2" style="gap:8px;margin-bottom:1rem">
+          <div class="metric-card" style="padding:0.9rem">
+            <div class="metric-label">Submitted</div>
+            <div class="metric-value" id="liveCount" style="font-size:1.6rem">0</div>
+          </div>
+          <div class="metric-card" style="padding:0.9rem">
+            <div class="metric-label">Avg rating</div>
+            <div class="metric-value" id="liveAvg" style="font-size:1.6rem">—</div>
+          </div>
+        </div>
+        <div class="card-title">Session sentiment</div>
+        <div class="sentiment-bar" id="liveSentBar" style="height:14px;border-radius:7px">
+          <div class="sentiment-pos" style="width:0%"></div>
+          <div class="sentiment-neu" style="width:0%"></div>
+          <div class="sentiment-neg" style="width:100%"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text3);margin-top:4px">
+          <span id="livePosLabel">Pos 0%</span>
+          <span id="liveNeuLabel">Neu 0%</span>
+          <span id="liveNegLabel">Neg 0%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- REVIEW FEED -->
+    <div>
+      <div class="card-title" style="margin-bottom:0.75rem">Recently submitted</div>
+      <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap" id="feedFilters">
+        <button class="cat-pill active" onclick="filterFeed('all',this)">All</button>
+        <button class="cat-pill" onclick="filterFeed('Audio & Headphones',this)">Audio</button>
+        <button class="cat-pill" onclick="filterFeed('E-Readers & Tablets',this)">E-Readers</button>
+        <button class="cat-pill" onclick="filterFeed('Batteries & Power',this)">Batteries</button>
+        <button class="cat-pill" onclick="filterFeed('Accessories',this)">Accessories</button>
+        <button class="cat-pill" onclick="filterFeed('Other Electronics',this)">Other</button>
+      </div>
+      <div id="reviewFeed"></div>
+      <div class="empty-state" id="feedEmpty">
+        <h3>No reviews yet</h3>
+        <p>Submit the first review using the form →</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ════════════════ PAGE 3: CSV UPLOAD ════════════════ -->
+<div id="page-upload" class="page">
+<div class="container">
+
+  <div class="page-header">
+    <h1>CSV <span class="accent2">Analyser</span></h1>
+    <p>Upload a reviews CSV — get classification, clustering, and AI summaries instantly</p>
+  </div>
+
+  <div id="uploadSection">
+    <div class="upload-zone" onclick="document.getElementById('fileInput').click()" id="uploadZone">
+      <div class="upload-icon">📂</div>
+      <h3>Drop your CSV file here</h3>
+      <p>or click to browse · Expects columns: <code style="color:var(--accent)">reviewText</code>, <code style="color:var(--accent)">overall</code> (1-5 stars)</p>
+      <p style="margin-top:8px;font-size:0.75rem;color:var(--text3)">Max 10 MB · CSV format only</p>
+      <input type="file" id="fileInput" accept=".csv" onchange="handleFile(event)">
+    </div>
+
+    <div style="margin-top:1.5rem">
+      <p style="font-size:0.82rem;color:var(--text3);margin-bottom:0.75rem">Or try with sample data:</p>
+      <button class="btn btn-secondary" onclick="loadSampleData()">▷ Load sample dataset</button>
+    </div>
+  </div>
+
+  <!-- ANALYSIS RESULTS -->
+  <div id="uploadResults" style="display:none">
+
+    <div class="hero-bar" style="margin-bottom:1.5rem">
+      <div>
+        <h2 id="uploadFilename">analysis_results.csv</h2>
+        <p id="uploadSubtitle">Processing complete · 3 pipeline stages run</p>
+      </div>
+      <button class="btn btn-secondary" onclick="resetUpload()">↩ Upload another</button>
+    </div>
+
+    <!-- PIPELINE STATUS -->
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-title">Pipeline stages</div>
+      <div id="pipelineStages"></div>
+    </div>
+
+    <!-- METRICS -->
+    <div class="grid-4" style="margin-bottom:1rem" id="uploadMetrics"></div>
+
+    <!-- CHARTS -->
+    <div class="grid-2" style="margin-bottom:1rem">
+      <div class="card">
+        <div class="card-title">Sentiment classification results</div>
+        <div class="chart-wrap" style="height:200px">
+          <canvas id="uploadSentChart" role="img" aria-label="Uploaded dataset sentiment distribution">Sentiment breakdown</canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Cluster distribution</div>
+        <div class="chart-wrap" style="height:200px">
+          <canvas id="uploadClusterChart" role="img" aria-label="Cluster distribution of uploaded reviews">Cluster breakdown</canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLUSTER ARTICLES -->
+    <div class="card-title" style="margin-bottom:0.75rem">AI-generated insights per cluster</div>
+    <div id="clusterArticles"></div>
+
+    <!-- PRODUCT TABLE -->
+    <div class="card" style="margin-top:1rem">
+      <div class="card-title">Per-product breakdown</div>
+      <table class="data-table">
+        <thead><tr><th>Product / ASIN</th><th>Reviews</th><th>Avg Rating</th><th>Sentiment</th><th>Cluster</th></tr></thead>
+        <tbody id="uploadTableBody"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+</div>
+</div>
+
+<!-- ════════════════ PAGE 4: SEARCH ════════════════ -->
+<div id="page-search" class="page">
+<div class="container">
+
+  <div class="page-header">
+    <h1>Product <span class="accent">Search</span></h1>
+    <p>Type what you're looking for — get AI-powered recommendations, sentiment and category insights</p>
+  </div>
+
+  <div class="search-wrap">
+    <input type="text" id="searchInput" placeholder="e.g. 'noise cancelling headphones under $100', 'best e-reader for travel'..." onkeydown="if(event.key==='Enter') doSearch()">
+    <button onclick="doSearch()">Search →</button>
+  </div>
+
+  <!-- QUICK QUERIES -->
+  <div style="margin-bottom:2rem">
+    <p style="font-size:0.78rem;color:var(--text3);margin-bottom:0.6rem">Popular searches:</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="cat-pill" onclick="quickSearch('wireless earbuds')">wireless earbuds</button>
+      <button class="cat-pill" onclick="quickSearch('kindle e-reader')">kindle e-reader</button>
+      <button class="cat-pill" onclick="quickSearch('AA batteries bulk')">AA batteries bulk</button>
+      <button class="cat-pill" onclick="quickSearch('USB-C hub')">USB-C hub</button>
+      <button class="cat-pill" onclick="quickSearch('laptop stand')">laptop stand</button>
+      <button class="cat-pill" onclick="quickSearch('bluetooth speaker')">bluetooth speaker</button>
+    </div>
+  </div>
+
+  <div id="searchEmpty" class="empty-state">
+    <h3>Start searching</h3>
+    <p>Enter a product type or category above to get AI-powered recommendations</p>
+  </div>
+
+  <div id="searchResults" style="display:none">
+
+    <!-- QUERY INFO -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap">
+      <span style="font-size:0.82rem;color:var(--text3)">Results for:</span>
+      <span style="font-family:var(--font-display);font-size:1rem;font-weight:600" id="searchQueryLabel"></span>
+      <span class="badge badge-cat" id="searchCatBadge"></span>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:1.5rem">
+      <div class="card">
+        <div class="card-title">Sentiment overview</div>
+        <div class="chart-wrap" style="height:160px">
+          <canvas id="searchSentChart" role="img" aria-label="Search result sentiment">Sentiment breakdown</canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Key themes in reviews</div>
+        <div id="keyThemes"></div>
+      </div>
+    </div>
+
+    <!-- RECOMMENDED PRODUCTS -->
+    <div class="card-title" style="margin-bottom:0.75rem">Recommended products</div>
+    <div id="searchProductList"></div>
+
+    <!-- AI SUMMARY -->
+    <div class="summary-article" style="margin-top:1rem">
+      <h3>AI recommendation summary</h3>
+      <p id="searchSummaryText"></p>
+    </div>
+
+    <!-- WORST PRODUCT -->
+    <div class="card" style="border-color:rgba(255,107,107,0.3);margin-top:1rem">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.75rem">
+        <span style="font-size:1.2rem">⚠️</span>
+        <div class="card-title" style="margin:0">Product to avoid</div>
+      </div>
+      <p id="worstProduct" style="font-size:0.88rem;font-weight:500"></p>
+      <p id="worstReason" style="font-size:0.82rem;color:var(--text2);margin-top:6px"></p>
+    </div>
+
+  </div>
+
+</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span class="toast-dot"></span>
+  <span id="toastMsg">Review submitted!</span>
+</div>
+
+<script>
+/* ══════════════════ DATA ══════════════════ */
+const CATEGORIES = ['Audio & Headphones','E-Readers & Tablets','Batteries & Power','Accessories','Other Electronics'];
+
+const MOCK_PRODUCTS = [
+  { name:'Sony WH-1000XM5', cat:'Audio & Headphones', rating:4.7, reviews:12420, pos:82, neu:11, neg:7, trend:'↑' },
+  { name:'Kindle Paperwhite 11th Gen', cat:'E-Readers & Tablets', rating:4.6, reviews:9831, pos:79, neu:13, neg:8, trend:'↑' },
+  { name:'Anker PowerCore 26800', cat:'Batteries & Power', rating:4.5, reviews:7654, pos:76, neu:14, neg:10, trend:'→' },
+  { name:'Bose QuietComfort 45', cat:'Audio & Headphones', rating:4.4, reviews:6210, pos:74, neu:15, neg:11, trend:'↑' },
+  { name:'Amazon Fire HD 10', cat:'E-Readers & Tablets', rating:4.3, reviews:5440, pos:71, neu:16, neg:13, trend:'→' },
+  { name:'Logitech MX Keys Mini', cat:'Accessories', rating:4.5, reviews:4320, pos:78, neu:13, neg:9, trend:'↑' },
+  { name:'Duracell AA 28-Pack', cat:'Batteries & Power', rating:4.6, reviews:3980, pos:80, neu:12, neg:8, trend:'→' },
+  { name:'AmazonBasics USB Hub', cat:'Accessories', rating:3.8, reviews:2870, pos:58, neu:20, neg:22, trend:'↓' },
+];
+
+const SUMMARIES = {
+  'Audio & Headphones': {
+    intro:'The premium headphone segment is dominated by two clear leaders offering exceptional noise-cancellation technology. Buyers consistently report that build quality and battery life are top differentiators.',
+    top:[
+      {n:'Sony WH-1000XM5', d:'Best-in-class ANC, 30h battery. Key complaints: no wired ANC mode, slightly large for travel.'},
+      {n:'Bose QuietComfort 45', d:'Slightly warmer sound profile, more comfortable for long sessions. Complaints: higher price, no LDAC support.'},
+      {n:'Jabra Evolve2 85', d:'Enterprise-focused, best call quality. Complaints: office aesthetic, heavy at 341g.'},
+    ],
+    worst:'Echo Buds (2nd Gen) — plagued with connectivity drops and poor call quality per 34% of 1-star reviews.',
+  },
+  'E-Readers & Tablets': {
+    intro:'E-reader buyers prioritise battery longevity and screen quality above all else. Amazon Kindle dominates with 68% market share in this dataset. The main complaint across all products is poor PDF handling.',
+    top:[
+      {n:'Kindle Paperwhite 11th Gen', d:'Waterproof, 300ppi, 10-week battery. Complaints: slow page turns in heavy PDFs.'},
+      {n:'Kobo Libra 2', d:'Best for library borrowing (OverDrive). Complaints: smaller ecosystem, fewer formats.'},
+      {n:'Amazon Fire HD 10', d:'Best for multimedia and kids. Complaints: heavy, ads on lock screen by default.'},
+    ],
+    worst:'Onyx BOOX Nova Air C — high price, inconsistent Android updates, short warranty support reported by users.',
+  },
+  'Batteries & Power': {
+    intro:'Consumer battery reviews reveal strong brand loyalty toward Anker and Duracell. Key differentiators are mAh accuracy (many budget brands deliver 60-80% of claimed capacity) and charge speed.',
+    top:[
+      {n:'Anker PowerCore 26800', d:'High capacity, dual USB-A + USB-C. Complaints: large size, no USB-C PD output on base model.'},
+      {n:'Duracell AA 28-Pack', d:'Consistent 3000mAh, 10yr shelf life. Complaints: price vs. generic brands.'},
+      {n:'Energizer Max Plus', d:'Good value multipacks. Complaints: plastic packaging difficult to open.'},
+    ],
+    worst:'Tencent USB Power Bank 30000mAh — 89% of 1-star reviews cite actual capacity at under 12,000mAh.',
+  },
+  'Accessories': {
+    intro:'The accessories cluster is the most heterogeneous, spanning keyboards, hubs, stands and cables. Price-to-quality ratio is the dominant review theme, with premium brands like Logitech commanding loyalty.',
+    top:[
+      {n:'Logitech MX Keys Mini', d:'Compact, great battery, multi-device. Complaints: no numpad, backlight uneven at edges.'},
+      {n:'Twelve South Curve Flex', d:'Adjustable laptop stand, premium build. Complaints: price, no cable management.'},
+      {n:'Anker USB-C Hub 7-in-1', d:'Reliable, plug-and-play. Complaints: gets warm under load, short cable.'},
+    ],
+    worst:'AmazonBasics USB 2.0 Hub — 28% 1-star rate citing devices not recognised and poor build quality.',
+  },
+  'Other Electronics': {
+    intro:'A catch-all cluster including smart home devices, Nespresso accessories and pet electronics. Reviews in this cluster show the widest sentiment variance (±40%), suggesting high product quality disparity.',
+    top:[
+      {n:'Echo Dot (5th Gen)', d:'Best smart speaker value. Complaints: requires Amazon account, privacy concerns.'},
+      {n:'Fire TV Stick 4K Max', d:'Fast, AV1 decoding. Complaints: remote batteries drain fast.'},
+      {n:'Ring Video Doorbell 4', d:'Reliable cloud storage. Complaints: subscription required for full features.'},
+    ],
+    worst:'Blink Mini Indoor Camera (2021) — users report frequent offline drops and cloud storage mandatory after free trial.',
+  },
+};
+
+const SEARCH_DATA = {
+  'wireless earbuds': { cat:'Audio & Headphones', pos:74, neu:14, neg:12,
+    themes:[['sound quality',94],['battery life',82],['fit & comfort',76],['call quality',65],['noise cancellation',61]],
+    products:[
+      {n:'Sony WF-1000XM5',r:4.6,rev:8420,desc:'Industry-best ANC in true wireless form. Praised for transparency mode.'},
+      {n:'Jabra Elite 4 Active',r:4.4,rev:5210,desc:'IP57 waterproof, great value. Best for sport use.'},
+      {n:'Anker Soundcore Liberty 4',r:4.2,rev:3870,desc:'Budget champion. Spatial audio support surprising at this price.'},
+    ],
+    summary:'For wireless earbuds, Sony WF-1000XM5 leads on ANC and sound quality but commands a premium. Jabra Elite 4 Active is the best value for sport users. Avoid generic no-brand earbuds which account for 78% of 1-star reviews citing connectivity failures.',
+    worst:'UrbanX City Pods Pro — 45% 1-star rate, primarily for connection drops within 5m of device.',
+  },
+  'kindle e-reader': { cat:'E-Readers & Tablets', pos:79, neu:13, neg:8,
+    themes:[['screen quality',96],['battery life',91],['build quality',74],['PDF support',52],['Audible integration',48]],
+    products:[
+      {n:'Kindle Paperwhite 11th Gen',r:4.7,rev:12400,desc:'Waterproof, warm light, 10 weeks battery. The benchmark.'},
+      {n:'Kindle Scribe',r:4.3,rev:4210,desc:'A4-size with stylus support. Ideal for note-taking alongside reading.'},
+      {n:'Kindle Basic (2022)',r:4.2,rev:6870,desc:'Best entry point. Complaints: no warm light, lower resolution.'},
+    ],
+    summary:'Kindle Paperwhite 11th Gen is the clear recommendation for most users — it nails the core reading experience. For students or professionals, Kindle Scribe adds handwriting support. The basic Kindle is adequate for casual readers on a tight budget.',
+    worst:'Kindle Oasis — premium price no longer justified vs Paperwhite. Users cite poor battery improvement for 2× cost.',
+  },
+  'AA batteries bulk': { cat:'Batteries & Power', pos:80, neu:12, neg:8,
+    themes:[['longevity',88],['value per pack',84],['leakage',72],['shelf life',68],['capacity accuracy',55]],
+    products:[
+      {n:'Duracell Optimum AA 28-Pack',r:4.6,rev:7840,desc:'Highest real-world longevity in independent tests. 12-year shelf life.'},
+      {n:'Energizer Max Plus AA 24-Pack',r:4.5,rev:5620,desc:'Great value for remotes and toys. Anti-leak guarantee.'},
+      {n:'Amazon Basics AA Performance 48-Pack',r:4.3,rev:9210,desc:'Best bulk value. Solid performance for low-drain devices.'},
+    ],
+    summary:'Duracell Optimum leads on real-world longevity, especially in high-drain devices like digital cameras and game controllers. Energizer Max Plus is the best mid-range option. Amazon Basics offers excellent bulk value for low-drain devices like remotes.',
+    worst:'Tencent 1.5V Alkaline AA — lab tests confirm only 58% of stated 3000mAh, frequent leakage in 18% of reviews.',
+  },
+  'USB-C hub': { cat:'Accessories', pos:68, neu:18, neg:14,
+    themes:[['port selection',87],['data transfer speed',79],['heat management',62],['compatibility',71],['build quality',65]],
+    products:[
+      {n:'Anker 7-in-1 USB-C Hub',r:4.5,rev:8920,desc:'Reliable, wide compatibility. Best all-rounder under £40.'},
+      {n:'CalDigit TS4 Thunderbolt 4 Dock',r:4.6,rev:2310,desc:'Premium 18-port dock. Best for power users with Thunderbolt laptops.'},
+      {n:'Baseus 9-in-1 Hub',r:4.2,rev:4580,desc:'Most ports at budget price. Runs warm but functional.'},
+    ],
+    summary:'For most users, the Anker 7-in-1 is the safest choice — well-tested, reliable, and competitively priced. Power users with Thunderbolt 4 laptops should invest in the CalDigit TS4 for full bandwidth. Avoid unknown brands; compatibility issues are the top complaint at 67% of negative reviews.',
+    worst:'Vava USB-C Hub — high failure rate (31% 1-star), frequently stops recognising connected drives after firmware updates.',
+  },
+  'laptop stand': { cat:'Accessories', pos:76, neu:15, neg:9,
+    themes:[['stability',91],['adjustability',84],['portability',72],['cable management',55],['heat dissipation',63]],
+    products:[
+      {n:'Twelve South Curve Flex',r:4.6,rev:3120,desc:'Premium aluminium, infinite adjustment. Best for home office setups.'},
+      {n:'Nexstand K2 Portable',r:4.5,rev:5870,desc:'Lightest foldable stand (130g). Best for frequent travellers.'},
+      {n:'Rain Design mStand',r:4.4,rev:4230,desc:'Fixed height, stunning aluminium build. Best stationary option.'},
+    ],
+    summary:'Laptop stand preference divides clearly between home office users (Twelve South Curve Flex) and commuters (Nexstand K2). Both deliver excellent stability. All top-3 share positive reviews around ergonomic benefit — neck pain reduction is the most cited improvement.',
+    worst:'HAVIT Laptop Stand — wobbly at angles above 35°, paint chips reported within first month of use by 24% of reviewers.',
+  },
+  'bluetooth speaker': { cat:'Audio & Headphones', pos:72, neu:16, neg:12,
+    themes:[['sound quality',90],['battery life',85],['waterproofing',74],['bass performance',69],['portability',78]],
+    products:[
+      {n:'JBL Charge 5',r:4.6,rev:14200,desc:'IP67 waterproof, 20h battery, powerbank function. Best all-rounder.'},
+      {n:'Bose SoundLink Flex',r:4.5,rev:9340,desc:'Best sound quality for its size. Floats in water. Slightly less bass.'},
+      {n:'Sony SRS-XB43',r:4.4,rev:6870,desc:'Best bass in this class. Extra buttons for sound customisation.'},
+    ],
+    summary:'The JBL Charge 5 is the most well-rounded Bluetooth speaker recommendation — excellent battery, waterproofing, and the bonus powerbank feature. For pure audio quality, Bose SoundLink Flex edges it out. Sony SRS-XB43 wins for bass-heavy listeners.',
+    worst:'Tribit Stormbox Micro 2 — sound quality degrades sharply above 70% volume, reported by 38% of reviewers as "distorted at loud volumes".',
+  },
+};
+
+/* ══════════════════ STATE ══════════════════ */
+let liveReviews = [];
+let feedFilter  = 'all';
+let charts      = {};
+let uploadCharts = {};
+
+/* ══════════════════ NAVIGATION ══════════════════ */
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const tabs = document.querySelectorAll('.nav-tab');
+  const idx = { dashboard:0, aggregator:1, upload:2, search:3 };
+  tabs[idx[name]].classList.add('active');
+}
+
+/* ══════════════════ TOAST ══════════════════ */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+/* ══════════════════ PAGE 1: DASHBOARD ══════════════════ */
+function getSentimentLabel(p) {
+  if (p >= 4) return '<span class="badge badge-pos">Positive</span>';
+  if (p >= 3) return '<span class="badge badge-neu">Neutral</span>';
+  return '<span class="badge badge-neg">Negative</span>';
+}
+
+function renderDashboard() {
+  // Rating chart
+  if (charts.rating) charts.rating.destroy();
+  const rCtx = document.getElementById('ratingChart').getContext('2d');
+  charts.rating = new Chart(rCtx, {
+    type: 'bar',
+    data: {
+      labels: ['1★','2★','3★','4★','5★'],
+      datasets: [{
+        label: 'Reviews',
+        data: [6, 5, 9, 22, 58],
+        backgroundColor: ['#ff6b6b','#ff9f6b','#ffd166','#a8d8a8','#00d9a5'],
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#9090b0' } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#9090b0', callback: v => v + '%' } }
+      }
+    }
+  });
+
+  // Sentiment donut
+  if (charts.sent) charts.sent.destroy();
+  const sCtx = document.getElementById('sentChart').getContext('2d');
+  charts.sent = new Chart(sCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Positive','Neutral','Negative'],
+      datasets: [{
+        data: [67, 15, 18],
+        backgroundColor: ['#00d9a5','#ffd166','#ff6b6b'],
+        borderWidth: 0,
+        hoverOffset: 8,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '70%',
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  // Trend line
+  if (charts.trend) charts.trend.destroy();
+  const tCtx = document.getElementById('trendChart').getContext('2d');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const vol    = [5200,6100,5800,7200,8100,7600,8900,9200,10100,11200,10800,11900];
+  const sent   = [3.8,3.9,3.7,4.0,4.1,4.0,4.2,4.1,4.3,4.2,4.1,4.3];
+  charts.trend = new Chart(tCtx, {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [
+        { label:'Review Volume', data: vol, borderColor:'#6c63ff', backgroundColor:'rgba(108,99,255,0.08)', fill:true, tension:0.4, yAxisID:'y', pointRadius:3, borderWidth:2 },
+        { label:'Avg Rating', data: sent, borderColor:'#00d9a5', backgroundColor:'transparent', tension:0.4, yAxisID:'y1', pointRadius:3, borderWidth:2, borderDash:[5,3] }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#9090b0', font:{size:11} } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#9090b0' }, position:'left' },
+        y1: { grid: { display:false }, ticks: { color: '#00d9a5', callback: v => v.toFixed(1)+'★' }, position:'right', min:3.5, max:4.5 }
+      }
+    }
+  });
+
+  // Category breakdown
+  const cb = document.getElementById('catBreakdown');
+  cb.innerHTML = '';
+  const catData = [
+    { name:'Audio & Headphones', reviews:28400, pos:72, neu:16, neg:12, avg:4.3 },
+    { name:'E-Readers & Tablets', reviews:22100, pos:79, neu:13, neg:8, avg:4.5 },
+    { name:'Batteries & Power', reviews:18700, pos:76, neu:14, neg:10, avg:4.4 },
+    { name:'Accessories', reviews:15300, pos:64, neu:18, neg:18, avg:4.0 },
+    { name:'Other Electronics', reviews:10300, pos:58, neu:20, neg:22, avg:3.8 },
+  ];
+  catData.forEach(c => {
+    cb.innerHTML += `
+    <div class="review-card" style="margin-bottom:0.6rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem;flex-wrap:wrap;gap:8px">
+        <span style="font-weight:500;font-size:0.9rem">${c.name}</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span style="font-size:0.78rem;color:var(--text3)">${c.reviews.toLocaleString()} reviews</span>
+          <span style="font-family:var(--font-display);font-weight:700;font-size:0.9rem">${c.avg}★</span>
+          <span class="badge badge-${c.pos>70?'pos':c.pos>60?'neu':'neg'}">${c.pos>70?'Positive':c.pos>60?'Mixed':'Negative'}</span>
+        </div>
+      </div>
+      <div class="sentiment-bar">
+        <div class="sentiment-pos" style="width:${c.pos}%"></div>
+        <div class="sentiment-neu" style="width:${c.neu}%"></div>
+        <div class="sentiment-neg" style="width:${c.neg}%"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text3);margin-top:4px">
+        <span>✓ Positive ${c.pos}%</span><span>~ Neutral ${c.neu}%</span><span>✗ Negative ${c.neg}%</span>
+      </div>
+    </div>`;
+  });
+
+  // Top products table
+  const tbody = document.getElementById('topTableBody');
+  tbody.innerHTML = '';
+  MOCK_PRODUCTS.slice(0, 6).forEach(p => {
+    tbody.innerHTML += `<tr>
+      <td>${p.name}</td>
+      <td><span class="badge badge-cat">${p.cat}</span></td>
+      <td><span class="stars">${'★'.repeat(Math.round(p.rating))}</span> ${p.rating}</td>
+      <td>${p.reviews.toLocaleString()}</td>
+      <td>
+        <div class="sentiment-bar" style="height:8px;min-width:80px">
+          <div class="sentiment-pos" style="width:${p.pos}%"></div>
+          <div class="sentiment-neu" style="width:${p.neu}%"></div>
+          <div class="sentiment-neg" style="width:${p.neg}%"></div>
+        </div>
+      </td>
+      <td style="color:${p.trend==='↑'?'var(--accent2)':p.trend==='↓'?'var(--accent3)':'var(--text3)'};font-weight:600">${p.trend}</td>
+    </tr>`;
+  });
+
+  // Summary articles
+  const sa = document.getElementById('summaryArticles');
+  sa.innerHTML = '';
+  Object.entries(SUMMARIES).forEach(([cat, s]) => {
+    sa.innerHTML += `
+    <div class="summary-article">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.75rem">
+        <span class="badge badge-cat">${cat}</span>
+      </div>
+      <h3>${cat} — Buyer's Guide</h3>
+      <p style="margin-bottom:1rem">${s.intro}</p>
+      ${s.top.map((t, i) => `
+        <div class="product-rank">
+          <div class="rank-num">#${i+1}</div>
+          <div>
+            <div class="rank-name">${t.n}</div>
+            <div class="rank-desc">${t.d}</div>
+          </div>
+        </div>`).join('')}
+      <div style="margin-top:0.75rem;padding:0.75rem;background:rgba(255,107,107,0.06);border:1px solid rgba(255,107,107,0.15);border-radius:var(--radius-sm)">
+        <span style="font-size:0.75rem;font-weight:600;color:var(--accent3)">AVOID</span>
+        <p style="font-size:0.82rem;color:var(--text2);margin-top:4px">${s.worst}</p>
+      </div>
+    </div>`;
+  });
+}
+
+function refreshDashboard() {
+  showToast('Dashboard refreshed with latest data');
+  renderDashboard();
+}
+
+/* ══════════════════ PAGE 2: AGGREGATOR ══════════════════ */
+function getSentFromRating(r) {
+  if (r >= 4) return 'positive';
+  if (r === 3) return 'neutral';
+  return 'negative';
+}
+
+function submitReview() {
+  const name    = document.getElementById('rev-name').value.trim();
+  const product = document.getElementById('rev-product').value.trim();
+  const cat     = document.getElementById('rev-category').value;
+  const rating  = parseInt(document.getElementById('rev-rating').value);
+  const text    = document.getElementById('rev-text').value.trim();
+
+  if (!name || !product || !text) {
+    showToast('Please fill in all fields');
+    return;
+  }
+
+  const sentiment = getSentFromRating(rating);
+  const review = { name, product, cat, rating, text, sentiment, ts: new Date() };
+  liveReviews.unshift(review);
+
+  // Clear form
+  document.getElementById('rev-name').value    = '';
+  document.getElementById('rev-product').value = '';
+  document.getElementById('rev-text').value    = '';
+
+  updateFeed();
+  updateLiveStats();
+  showToast('Review submitted & classified as ' + sentiment.toUpperCase());
+}
+
+function updateFeed() {
+  const feed  = document.getElementById('reviewFeed');
+  const empty = document.getElementById('feedEmpty');
+  const filtered = feedFilter === 'all' ? liveReviews : liveReviews.filter(r => r.cat === feedFilter);
+
+  if (filtered.length === 0) {
+    feed.innerHTML  = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  feed.innerHTML = filtered.map(r => {
+    const initials = r.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
+    const colors = { positive:'rgba(0,217,165,0.15)', neutral:'rgba(255,209,102,0.15)', negative:'rgba(255,107,107,0.15)' };
+    const textClr = { positive:'var(--accent2)', neutral:'var(--accent4)', negative:'var(--accent3)' };
+    const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+    const mins = Math.floor((new Date() - r.ts) / 60000);
+    const timeLabel = mins < 1 ? 'just now' : mins + 'm ago';
+    return `
+    <div class="feed-item">
+      <div class="feed-avatar" style="background:${colors[r.sentiment]};color:${textClr[r.sentiment]}">${initials}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+          <span style="font-size:0.85rem;font-weight:500">${r.name}</span>
+          <span class="badge badge-${r.sentiment.slice(0,3)}">${r.sentiment}</span>
+          <span style="font-size:0.75rem;color:var(--accent4)">${stars}</span>
+        </div>
+        <div class="feed-text">${r.text}</div>
+        <div class="feed-meta">${r.product} · <span class="badge badge-cat" style="font-size:0.65rem">${r.cat}</span> · ${timeLabel}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterFeed(cat, btn) {
+  feedFilter = cat;
+  document.querySelectorAll('#feedFilters .cat-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  updateFeed();
+}
+
+function updateLiveStats() {
+  const n = liveReviews.length;
+  document.getElementById('liveCount').textContent = n;
+  if (n === 0) { document.getElementById('liveAvg').textContent = '—'; return; }
+
+  const avg = liveReviews.reduce((s,r) => s + r.rating, 0) / n;
+  document.getElementById('liveAvg').textContent = avg.toFixed(1) + '★';
+
+  const pos = liveReviews.filter(r => r.sentiment === 'positive').length / n * 100;
+  const neu = liveReviews.filter(r => r.sentiment === 'neutral').length / n * 100;
+  const neg = 100 - pos - neu;
+
+  const bar = document.getElementById('liveSentBar');
+  bar.children[0].style.width = pos.toFixed(0) + '%';
+  bar.children[1].style.width = neu.toFixed(0) + '%';
+  bar.children[2].style.width = neg.toFixed(0) + '%';
+
+  document.getElementById('livePosLabel').textContent = 'Pos ' + pos.toFixed(0) + '%';
+  document.getElementById('liveNeuLabel').textContent = 'Neu ' + neu.toFixed(0) + '%';
+  document.getElementById('liveNegLabel').textContent = 'Neg ' + neg.toFixed(0) + '%';
+}
+
+/* ══════════════════ PAGE 3: CSV UPLOAD ══════════════════ */
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  showToast('Parsing ' + file.name + '...');
+  setTimeout(() => processUpload(file.name, true), 600);
+}
+
+function loadSampleData() {
+  showToast('Loading sample dataset...');
+  setTimeout(() => processUpload('amazon_electronics_sample.csv', false), 600);
+}
+
+function resetUpload() {
+  document.getElementById('uploadSection').style.display = 'block';
+  document.getElementById('uploadResults').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+  if (uploadCharts.sent) uploadCharts.sent.destroy();
+  if (uploadCharts.cluster) uploadCharts.cluster.destroy();
+}
+
+function processUpload(filename, fromFile) {
+  document.getElementById('uploadSection').style.display = 'none';
+  document.getElementById('uploadResults').style.display = 'block';
+
+  document.getElementById('uploadFilename').textContent = filename;
+  document.getElementById('uploadSubtitle').textContent = 'Processing complete · 3 pipeline stages run';
+
+  // Pipeline stages
+  const stages = [
+    { label:'Data Preprocessing', detail:'Cleaned 1,247 reviews · removed 43 duplicates · standardised ratings', pct:100, color:'var(--accent2)' },
+    { label:'Sentiment Classification (DistilBERT)', detail:'Classified 1,247 reviews · Accuracy 91.3% · Macro F1 0.887', pct:100, color:'var(--accent)' },
+    { label:'Category Clustering (KMeans k=5)', detail:'5 clusters identified · Silhouette score 0.641', pct:100, color:'var(--accent4)' },
+    { label:'Review Summarisation (BART)', detail:'5 category articles generated · avg 280 tokens each', pct:100, color:'#c77dff' },
+  ];
+  document.getElementById('pipelineStages').innerHTML = stages.map(s => `
+    <div style="margin-bottom:1rem">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:0.82rem">
+        <span style="font-weight:500">${s.label}</span>
+        <span style="color:var(--accent2)">✓ Complete</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${s.pct}%;background:${s.color}"></div></div>
+      <div style="font-size:0.72rem;color:var(--text3);margin-top:3px">${s.detail}</div>
+    </div>`).join('');
+
+  // Metrics
+  document.getElementById('uploadMetrics').innerHTML = [
+    { label:'Reviews Processed', value:'1,247', delta:'' },
+    { label:'Positive', value:'68.4%', delta:'up' },
+    { label:'Neutral', value:'14.2%', delta:'neutral' },
+    { label:'Negative', value:'17.4%', delta:'down' },
+  ].map(m => `
+    <div class="metric-card">
+      <div class="metric-label">${m.label}</div>
+      <div class="metric-value" style="font-size:1.5rem">${m.value}</div>
+    </div>`).join('');
+
+  // Charts
+  setTimeout(() => {
+    if (uploadCharts.sent) uploadCharts.sent.destroy();
+    const sCtx = document.getElementById('uploadSentChart').getContext('2d');
+    uploadCharts.sent = new Chart(sCtx, {
+      type: 'doughnut',
+      data: { labels:['Positive','Neutral','Negative'],
+        datasets:[{ data:[68,14,18], backgroundColor:['#00d9a5','#ffd166','#ff6b6b'], borderWidth:0 }] },
+      options: { responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{ legend:{ display:false } } }
+    });
+
+    if (uploadCharts.cluster) uploadCharts.cluster.destroy();
+    const cCtx = document.getElementById('uploadClusterChart').getContext('2d');
+    uploadCharts.cluster = new Chart(cCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Audio','E-Readers','Batteries','Accessories','Other'],
+        datasets: [{ data:[320, 280, 240, 198, 209], backgroundColor:['#6c63ff','#00d9a5','#ffd166','#ff6b6b','#c77dff'], borderRadius:6 }]
+      },
+      options: { responsive:true, maintainAspectRatio:false, indexAxis:'y',
+        plugins:{ legend:{ display:false } },
+        scales: { x:{ grid:{ color:'rgba(255,255,255,0.04)' }, ticks:{ color:'#9090b0' } },
+                  y:{ grid:{ display:false }, ticks:{ color:'#9090b0' } } } }
+    });
+  }, 100);
+
+  // Cluster articles
+  const ca = document.getElementById('clusterArticles');
+  ca.innerHTML = CATEGORIES.map((cat, i) => {
+    const s = Object.values(SUMMARIES)[i];
+    return `
+    <div class="summary-article" style="margin-bottom:0.75rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem;flex-wrap:wrap;gap:8px">
+        <span class="badge badge-cat">Cluster ${i+1}</span>
+        <span style="font-size:0.78rem;color:var(--text3)">${cat}</span>
+      </div>
+      <p style="font-size:0.85rem">${s.intro}</p>
+      <div style="margin-top:0.6rem;font-size:0.78rem;color:var(--text3)">
+        Top products: ${s.top.map(t => t.n).join(' · ')}
+      </div>
+    </div>`;
+  }).join('');
+
+  // Table
+  const tbody = document.getElementById('uploadTableBody');
+  tbody.innerHTML = MOCK_PRODUCTS.map(p => `
+    <tr>
+      <td>${p.name}</td>
+      <td>${Math.floor(p.reviews / 8)}</td>
+      <td>${p.rating}★</td>
+      <td><div class="sentiment-bar" style="height:8px;min-width:70px">
+        <div class="sentiment-pos" style="width:${p.pos}%"></div>
+        <div class="sentiment-neu" style="width:${p.neu}%"></div>
+        <div class="sentiment-neg" style="width:${p.neg}%"></div>
+      </div></td>
+      <td><span class="badge badge-cat">${p.cat}</span></td>
+    </tr>`).join('');
+}
+
+/* ══════════════════ PAGE 4: SEARCH ══════════════════ */
+let searchSentChart = null;
+
+function quickSearch(q) {
+  document.getElementById('searchInput').value = q;
+  doSearch();
+}
+
+function doSearch() {
+  const raw = document.getElementById('searchInput').value.trim().toLowerCase();
+  if (!raw) return;
+
+  const key = Object.keys(SEARCH_DATA).find(k => raw.includes(k) || k.includes(raw));
+  const data = key ? SEARCH_DATA[key] : SEARCH_DATA['wireless earbuds'];
+
+  document.getElementById('searchEmpty').style.display = 'none';
+  document.getElementById('searchResults').style.display = 'block';
+  document.getElementById('searchQueryLabel').textContent = '"' + document.getElementById('searchInput').value.trim() + '"';
+  document.getElementById('searchCatBadge').textContent = data.cat;
+
+  // Sentiment chart
+  setTimeout(() => {
+    if (searchSentChart) searchSentChart.destroy();
+    const sCtx = document.getElementById('searchSentChart').getContext('2d');
+    searchSentChart = new Chart(sCtx, {
+      type: 'doughnut',
+      data: { labels:['Positive','Neutral','Negative'],
+        datasets:[{ data:[data.pos, data.neu, data.neg], backgroundColor:['#00d9a5','#ffd166','#ff6b6b'], borderWidth:0 }] },
+      options: { responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{ legend:{ display:false } } }
+    });
+  }, 50);
+
+  // Key themes
+  const maxVal = data.themes[0][1];
+  document.getElementById('keyThemes').innerHTML = data.themes.map(([w, n]) => `
+    <div class="word-bar">
+      <div class="word-label">${w}</div>
+      <div class="word-track"><div class="word-fill" style="width:${Math.round(n/maxVal*100)}%"></div></div>
+      <div class="word-count">${n}%</div>
+    </div>`).join('');
+
+  // Products
+  document.getElementById('searchProductList').innerHTML = data.products.map((p, i) => `
+    <div class="result-product">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <span style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--accent)">#${i+1}</span>
+            <h3 style="margin:0">${p.n}</h3>
+          </div>
+          <p style="font-size:0.85rem;color:var(--text2)">${p.desc}</p>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-family:var(--font-display);font-size:1.3rem;font-weight:700">${p.r}★</div>
+          <div style="font-size:0.72rem;color:var(--text3)">${p.rev.toLocaleString()} reviews</div>
+          <span class="badge badge-${p.r>=4.5?'pos':p.r>=4.0?'neu':'neg'}" style="margin-top:6px">${p.r>=4.5?'Top pick':p.r>=4.0?'Good':'Fair'}</span>
+        </div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('searchSummaryText').textContent = data.summary;
+  document.getElementById('worstProduct').textContent = data.worst.split('—')[0];
+  document.getElementById('worstReason').textContent = '— ' + data.worst.split('—')[1];
+}
+
+/* ══════════════════ INIT ══════════════════ */
+renderDashboard();
+
+// Drag-and-drop for upload zone
+const zone = document.getElementById('uploadZone');
+if (zone) {
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) { showToast('Reading ' + file.name); setTimeout(() => processUpload(file.name, true), 600); }
+  });
+}
+</script>
+</body>
+</html>
