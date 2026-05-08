@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReviewIntel — Amazon Product Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --brand:#0a0a0f;--accent:#6c63ff;--accent2:#00d9a5;--accent3:#ff6b6b;--accent4:#ffd166;
+  --surface:#111118;--surface2:#1a1a26;--surface3:#22223a;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#f0f0f8;--text2:#9090b0;--text3:#5a5a7a;
+  --font-display:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;
+  --radius:14px;--radius-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-body);background:var(--brand);color:var(--text);min-height:100vh;line-height:1.6;overflow-x:hidden;}
+
+nav{position:sticky;top:0;z-index:100;background:rgba(10,10,15,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:60px;}
+.logo{font-family:var(--font-display);font-size:1.2rem;font-weight:800;letter-spacing:-0.03em;background:linear-gradient(135deg,#6c63ff,#00d9a5);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.logo span{-webkit-text-fill-color:var(--text);opacity:0.4;font-weight:400;}
+.nav-tabs{display:flex;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:4px;}
+.nav-tab{font-family:var(--font-body);font-size:0.78rem;font-weight:500;padding:6px 14px;border-radius:7px;border:none;background:transparent;color:var(--text2);cursor:pointer;transition:all 0.2s;}
+.nav-tab:hover{color:var(--text);background:var(--surface3);}
+.nav-tab.active{background:var(--accent);color:#fff;}
+
+.page{display:none;animation:fadeIn 0.3s ease;}
+.page.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+.container{max-width:1200px;margin:0 auto;padding:2rem;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;}
+@media(max-width:768px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;}
+.card-title{font-family:var(--font-display);font-size:0.8rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:1rem;}
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;}
+.metric-label{font-size:0.75rem;color:var(--text3);margin-bottom:0.4rem;text-transform:uppercase;letter-spacing:0.06em;}
+.metric-value{font-family:var(--font-display);font-size:1.9rem;font-weight:700;letter-spacing:-0.04em;}
+.metric-delta{font-size:0.75rem;margin-top:0.3rem;color:var(--text3);}
+
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:0.72rem;font-weight:600;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.04em;}
+.badge-pos{background:rgba(0,217,165,0.15);color:var(--accent2);}
+.badge-neg{background:rgba(255,107,107,0.15);color:var(--accent3);}
+.badge-neu{background:rgba(255,209,102,0.15);color:var(--accent4);}
+.badge-cat{background:rgba(108,99,255,0.15);color:var(--accent);}
+
+.hero-bar{background:linear-gradient(135deg,rgba(108,99,255,0.12) 0%,rgba(0,217,165,0.06) 100%);border:1px solid rgba(108,99,255,0.2);border-radius:var(--radius);padding:1.5rem 2rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;}
+.hero-bar h2{font-family:var(--font-display);font-size:1.3rem;font-weight:700;letter-spacing:-0.03em;}
+.hero-bar p{font-size:0.85rem;color:var(--text2);margin-top:4px;}
+
+.sentiment-bar{display:flex;height:10px;border-radius:20px;overflow:hidden;margin:0.5rem 0;}
+.sentiment-pos{background:var(--accent2);}
+.sentiment-neu{background:var(--accent4);}
+.sentiment-neg{background:var(--accent3);}
+
+.review-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:0.75rem;transition:border-color 0.2s;}
+.review-card:hover{border-color:var(--border2);}
+
+.cat-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem;}
+.cat-pill{font-size:0.8rem;font-weight:500;padding:6px 16px;border-radius:20px;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer;transition:all 0.2s;}
+.cat-pill:hover{border-color:var(--accent);color:var(--accent);}
+.cat-pill.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+.product-rank{display:flex;align-items:flex-start;gap:14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;margin:0.6rem 0;}
+.rank-num{font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--accent);min-width:32px;line-height:1;}
+.rank-name{font-size:0.9rem;font-weight:500;margin-bottom:3px;}
+
+.data-table{width:100%;border-collapse:collapse;font-size:0.85rem;}
+.data-table th{text-align:left;padding:10px 12px;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);border-bottom:1px solid var(--border);font-weight:600;}
+.data-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text2);}
+.data-table tr:hover td{background:var(--surface2);}
+.data-table td:first-child{color:var(--text);font-weight:500;}
+
+.btn{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-body);font-size:0.9rem;font-weight:500;padding:10px 20px;border-radius:var(--radius-sm);border:none;cursor:pointer;transition:all 0.2s;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:#5a52dd;transform:translateY(-1px);}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border2);}
+.btn-secondary:hover{background:var(--surface3);}
+
+.form-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font-body);font-size:0.9rem;padding:10px 14px;transition:border 0.2s;outline:none;}
+.form-input:focus{border-color:var(--accent);}
+textarea.form-input{resize:vertical;min-height:100px;}
+.form-label{font-size:0.8rem;color:var(--text2);margin-bottom:0.4rem;display:block;}
+.form-group{margin-bottom:1rem;}
+
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--accent2);display:inline-block;margin-right:6px;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+
+.sidebar-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;position:sticky;top:80px;}
+
+.result-box{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:1rem;margin-top:0.75rem;display:none;}
+.result-box.show{display:block;}
+
+.summary-box{background:linear-gradient(135deg,var(--surface) 0%,rgba(108,99,255,0.06) 100%);border:1px solid var(--border2);border-radius:var(--radius);padding:1.5rem;margin-top:1rem;display:none;}
+.summary-box.show{display:block;}
+.summary-box p{font-size:0.88rem;color:var(--text2);line-height:1.75;}
+
+.spinner{display:none;align-items:center;gap:8px;font-size:0.82rem;color:var(--text3);padding:0.75rem 0;}
+.spinner.show{display:flex;}
+.spin{width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.progress-bar{background:var(--surface2);border-radius:20px;height:8px;overflow:hidden;margin:4px 0;}
+.progress-fill{height:100%;border-radius:20px;transition:width 0.6s ease;}
+
+.feed-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0;}
+.empty-state{text-align:center;padding:3rem;color:var(--text3);}
+.empty-state h3{font-family:var(--font-display);font-size:1.1rem;color:var(--text2);margin-bottom:0.5rem;}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Review<span>Intel</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('dashboard')">Dashboard</button>
+    <button class="nav-tab" onclick="showPage('clusters')">Cluster Insights</button>
+    <button class="nav-tab" onclick="showPage('classify')">Classify Review</button>
+  </div>
+</nav>
+
+<!-- ══════════════ PAGE 1: DASHBOARD ══════════════ -->
+<div id="page-dashboard" class="page active">
+<div class="container">
+
+  <div class="hero-bar">
+    <div>
+      <h2>Marketing Intelligence Dashboard</h2>
+      <p><span class="live-dot"></span>Real-time product sentiment · Amazon Electronics</p>
+    </div>
+  </div>
+
+  <div class="grid-4" style="margin-bottom:1rem" id="dashMetrics">
+    <div class="metric-card"><div class="metric-label">Total Reviews</div><div class="metric-value accent" id="m-total">—</div></div>
+    <div class="metric-card"><div class="metric-label">Avg Rating</div><div class="metric-value" id="m-rating">—</div></div>
+    <div class="metric-card"><div class="metric-label">Positive Sentiment</div><div class="metric-value" style="color:var(--accent2)" id="m-pos">—</div></div>
+    <div class="metric-card"><div class="metric-label">Negative Alerts</div><div class="metric-value" style="color:var(--accent3)" id="m-neg">—</div></div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:1rem">
+    <div class="card">
+      <div class="card-title">Sentiment distribution</div>
+      <div style="position:relative;height:220px"><canvas id="sentChart"></canvas></div>
+      <div style="display:flex;gap:16px;margin-top:12px;font-size:0.75rem">
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#00d9a5;display:inline-block"></span>Positive</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#ffd166;display:inline-block"></span>Neutral</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#ff6b6b;display:inline-block"></span>Negative</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Category breakdown</div>
+      <div id="catBreakdown"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Top rated products</div>
+    <table class="data-table">
+      <thead><tr><th>Product</th><th>Cluster</th><th>Rating</th><th>Reviews</th></tr></thead>
+      <tbody id="topTableBody"></tbody>
+    </table>
+  </div>
+
+</div>
+</div>
+
+<!-- ══════════════ PAGE 2: CLUSTERS ══════════════ -->
+<div id="page-clusters" class="page">
+<div class="container">
+
+  <div style="margin-bottom:1.5rem">
+    <h1 style="font-family:var(--font-display);font-size:2rem;font-weight:700;letter-spacing:-0.04em;margin-bottom:0.4rem">
+      Cluster <span style="color:var(--accent)">Insights</span>
+    </h1>
+    <p style="color:var(--text2)">Select a cluster to explore products, reviews and AI summary</p>
+  </div>
+
+  <div class="cat-pills" id="clusterPills"></div>
+
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-title">🏆 Top 3 Products</div>
+        <div id="top3List"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Cluster Sentiment</div>
+        <div id="clusterSentBar"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-title">📝 AI Summary (Gemini)</div>
+        <button class="btn btn-primary" onclick="generateSummary()" style="width:100%;margin-bottom:1rem">
+          ✨ Generate Summary
+        </button>
+        <div class="spinner" id="summarySpinner"><div class="spin"></div> Gemini is analyzing...</div>
+        <div class="summary-box" id="summaryBox"><p id="summaryText"></p></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:1rem">
+    <div class="card-title" style="margin-bottom:0.75rem">Recent Reviews</div>
+    <div id="reviewFeed"></div>
+  </div>
+
+</div>
+</div>
+
+<!-- ══════════════ PAGE 3: CLASSIFY ══════════════ -->
+<div id="page-classify" class="page">
+<div class="container">
+
+  <div style="margin-bottom:1.5rem">
+    <h1 style="font-family:var(--font-display);font-size:2rem;font-weight:700;letter-spacing:-0.04em;margin-bottom:0.4rem">
+      Classify <span style="color:var(--accent2)">Review</span>
+    </h1>
+    <p style="color:var(--text2)">Paste any review — our RoBERTa model classifies it instantly</p>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-title">Input</div>
+        <div class="form-group">
+          <label class="form-label">Review text</label>
+          <textarea class="form-input" id="classifyInput" placeholder="Paste a product review here..."></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="classifyReview()" style="width:100%">
+          Classify Sentiment →
+        </button>
+        <div class="spinner" id="classifySpinner" style="margin-top:0.75rem"><div class="spin"></div> Analyzing...</div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="min-height:200px">
+        <div class="card-title">Result</div>
+        <div id="classifyResult">
+          <div class="empty-state" style="padding:1.5rem">
+            <h3>Waiting for input</h3>
+            <p>Paste a review and click classify</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+const API = 'http://localhost:5050';
+let dashData    = null;
+let clusterData = null;
+let currentCluster = null;
+let sentChart   = null;
+
+/* ══ NAVIGATION ══ */
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const idx = {dashboard:0, clusters:1, classify:2};
+  document.querySelectorAll('.nav-tab')[idx[name]].classList.add('active');
+  if (name === 'clusters' && !currentCluster) loadClusters();
+}
+
+/* ══ SENTIMENT BAR ══ */
+function sentBar(pos, neu, neg) {
+  return `
+  <div class="sentiment-bar">
+    <div class="sentiment-pos" style="width:${pos}%"></div>
+    <div class="sentiment-neu" style="width:${neu}%"></div>
+    <div class="sentiment-neg" style="width:${neg}%"></div>
+  </div>
+  <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text3);margin-top:4px">
+    <span>✓ Pos ${pos}%</span><span>~ Neu ${neu}%</span><span>✗ Neg ${neg}%</span>
+  </div>`;
+}
+
+function badgeClass(label) {
+  const l = label.toLowerCase();
+  if (l.includes('pos')) return 'badge-pos';
+  if (l.includes('neg')) return 'badge-neg';
+  return 'badge-neu';
+}
+
+/* ══ DASHBOARD ══ */
+async function loadDashboard() {
+  try {
+    const res  = await fetch(`${API}/api/dashboard`);
+    dashData   = await res.json();
+
+    document.getElementById('m-total').textContent  = dashData.total.toLocaleString();
+    document.getElementById('m-rating').textContent = dashData.avg_rating + ' ★';
+    document.getElementById('m-pos').textContent    = dashData.pos_pct + '%';
+    document.getElementById('m-neg').textContent    = dashData.neg_pct + '%';
+
+    // Donut chart
+    if (sentChart) sentChart.destroy();
+    const ctx = document.getElementById('sentChart').getContext('2d');
+    sentChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Positive','Neutral','Negative'],
+        datasets: [{
+          data: [dashData.pos_pct, dashData.neu_pct, dashData.neg_pct],
+          backgroundColor: ['#00d9a5','#ffd166','#ff6b6b'],
+          borderWidth: 0, hoverOffset: 8
+        }]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false, cutout:'70%',
+        plugins:{ legend:{ display:false } }
+      }
+    });
+
+    // Category breakdown
+    const cb = document.getElementById('catBreakdown');
+    cb.innerHTML = dashData.clusters.map(c => {
+      const overall = c.pos > 60 ? 'Positive' : c.pos > 40 ? 'Mixed' : 'Negative';
+      const bc      = c.pos > 60 ? 'badge-pos' : c.pos > 40 ? 'badge-neu' : 'badge-neg';
+      return `
+      <div style="margin-bottom:0.75rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:6px">
+          <span style="font-size:0.85rem;font-weight:500">${c.name}</span>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span style="font-size:0.75rem;color:var(--text3)">${c.total.toLocaleString()}</span>
+            <span style="color:var(--accent4);font-size:0.82rem;font-weight:600">${c.avg_rating}★</span>
+            <span class="badge ${bc}">${overall}</span>
+          </div>
+        </div>
+        ${sentBar(c.pos, c.neu, c.neg)}
+      </div>`;
+    }).join('');
+
+    // Top products table
+    const tbody = document.getElementById('topTableBody');
+    tbody.innerHTML = dashData.top_products.map(p => `
+    <tr>
+      <td>${p.name}</td>
+      <td><span class="badge badge-cat">${p.cluster}</span></td>
+      <td style="color:var(--accent4);font-weight:600">${p.rating}★</td>
+      <td>${p.reviews.toLocaleString()}</td>
+    </tr>`).join('');
+
+  } catch(e) {
+    console.error('Dashboard error:', e);
+    document.getElementById('m-total').textContent = 'Error — is server.py running?';
+  }
+}
+
+/* ══ CLUSTERS ══ */
+async function loadClusters() {
+  try {
+    const res      = await fetch(`${API}/api/clusters`);
+    const clusters = await res.json();
+    const pills    = document.getElementById('clusterPills');
+    pills.innerHTML = clusters.map((c, i) =>
+      `<button class="cat-pill ${i===0?'active':''}" onclick="selectCluster('${c}',this)">${c}</button>`
+    ).join('');
+    selectCluster(clusters[0], pills.children[0]);
+  } catch(e) {
+    console.error('Clusters error:', e);
+  }
+}
+
+async function selectCluster(name, btn) {
+  currentCluster = name;
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  // reset summary
+  document.getElementById('summaryBox').classList.remove('show');
+  document.getElementById('summaryText').textContent = '';
+
+  try {
+    const res = await fetch(`${API}/api/cluster/${encodeURIComponent(name)}`);
+    clusterData = await res.json();
+
+    // Top 3
+    document.getElementById('top3List').innerHTML = clusterData.top3.map((p, i) => `
+    <div class="product-rank">
+      <div class="rank-num">#${i+1}</div>
+      <div class="rank-name">${p}</div>
+    </div>`).join('');
+
+    // Sentiment bar
+    document.getElementById('clusterSentBar').innerHTML =
+      sentBar(clusterData.pos, clusterData.neu, clusterData.neg);
+
+    // Reviews feed
+    const feed = document.getElementById('reviewFeed');
+    feed.innerHTML = clusterData.reviews.map(r => {
+      const initials = r.username.slice(0,2).toUpperCase();
+      const stars    = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+      const color    = r.sentiment.includes('pos') ? 'var(--accent2)' :
+                       r.sentiment.includes('neg') ? 'var(--accent3)' : 'var(--accent4)';
+      return `
+      <div class="review-card">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div class="feed-avatar" style="background:rgba(108,99,255,0.15);color:var(--accent)">${initials}</div>
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
+              <span style="font-size:0.85rem;font-weight:500">${r.username}</span>
+              <span style="color:${color};font-size:0.72rem;font-weight:600;text-transform:uppercase;
+              background:rgba(0,0,0,0.3);padding:2px 8px;border-radius:20px">${r.sentiment}</span>
+              <span style="color:var(--accent4);font-size:0.75rem">${stars}</span>
+            </div>
+            <div style="font-size:0.85rem;color:var(--text2);line-height:1.6">${r.text}</div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+  } catch(e) {
+    console.error('Cluster error:', e);
+  }
+}
+
+/* ══ GEMINI SUMMARY ══ */
+async function generateSummary() {
+  if (!currentCluster) return;
+  const spinner = document.getElementById('summarySpinner');
+  const box     = document.getElementById('summaryBox');
+  const text    = document.getElementById('summaryText');
+
+  spinner.classList.add('show');
+  box.classList.remove('show');
+
+  try {
+    const res  = await fetch(`${API}/api/summarize`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({cluster: currentCluster})
+    });
+    const data = await res.json();
+    spinner.classList.remove('show');
+    if (data.summary) {
+      text.innerHTML = data.summary.replace(/\n/g,'<br>');
+      box.classList.add('show');
+    } else {
+      text.innerHTML = 'Error: ' + (data.error || 'Unknown error');
+      box.classList.add('show');
+    }
+  } catch(e) {
+    spinner.classList.remove('show');
+    text.innerHTML = 'Error connecting to server.';
+    box.classList.add('show');
+  }
+}
+
+/* ══ CLASSIFY ══ */
+async function classifyReview() {
+  const text    = document.getElementById('classifyInput').value.trim();
+  const spinner = document.getElementById('classifySpinner');
+  const result  = document.getElementById('classifyResult');
+  if (!text) return;
+
+  spinner.classList.add('show');
+  result.innerHTML = '';
+
+  try {
+    const res  = await fetch(`${API}/api/classify`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text})
+    });
+    const data = await res.json();
+    spinner.classList.remove('show');
+
+    const label = data.label || 'Unknown';
+    const score = data.score || 0;
+    const color = label.toLowerCase().includes('pos') ? 'var(--accent2)' :
+                  label.toLowerCase().includes('neg') ? 'var(--accent3)' : 'var(--accent4)';
+    const bc    = badgeClass(label);
+
+    result.innerHTML = `
+    <div style="text-align:center;padding:1.5rem 0">
+      <div style="font-family:var(--font-display);font-size:2.5rem;font-weight:800;
+      color:${color};margin-bottom:0.5rem">${label.charAt(0).toUpperCase()+label.slice(1).toLowerCase()}</div>
+      <div style="font-size:0.9rem;color:var(--text2);margin-bottom:1.5rem">
+        Confidence: ${(score*100).toFixed(1)}%</div>
+      <div class="progress-bar" style="max-width:300px;margin:0 auto">
+        <div class="progress-fill" style="width:${(score*100).toFixed(0)}%;background:${color}"></div>
+      </div>
+    </div>
+    <div style="margin-top:1.5rem;padding:1rem;background:var(--surface2);
+    border-radius:var(--radius-sm);font-size:0.82rem;color:var(--text3)">
+      <strong style="color:var(--text2)">Review analyzed:</strong><br>
+      <span style="color:var(--text2)">${text.slice(0,200)}${text.length>200?'...':''}</span>
+    </div>`;
+  } catch(e) {
+    spinner.classList.remove('show');
+    result.innerHTML = `<div style="color:var(--accent3);padding:1rem">
+      Error connecting to server. Make sure server.py is running.</div>`;
+  }
+}
+
+/* ══ INIT ══ */
+loadDashboard();
+</script>
+</body>
+</html>
