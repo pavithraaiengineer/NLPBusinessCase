@@ -48,9 +48,10 @@ NLPBusinessCase/
 - Evaluation: confusion matrix, ROC-AUC (OvR), calibration curves, per-class F1
 
 ### `Clustering_ProjectNLPLLM.ipynb`
-- TF-IDF vectorisation + K-Means clustering to surface recurring product themes
-- Silhouette analysis for optimal `k` selection
-- Cluster labelling and export to `clustered_products.csv`
+- Clustering_ProjectNLPLLM.ipynbTF-IDF vectorization
+- K-Means clustering to identify and surface recurring product themes.
+- Elbow Method analysis to determine the optimal number of clusters ($k$) for precise data segmentation.
+- Cluster labeling and data export to clustered_products.csv for integration with the deployment dashboard.
 
 ### `Summarization_Final.ipynb`
 - Abstractive summarisation of review clusters using BART/T5
