@@ -21,7 +21,7 @@ This project applies state-of-the-art NLP techniques to the **McAuley-Lab Amazon
 
 ```
 NLPBusinessCase/
-│
+│__ Amazon_VADER_RoBERTa_Notebook.ipynb              # Phase 1 & 2: EDA + RoBERTa sentiment classifier
 ├── Data_preprocessing_classification_NLPLLM.ipynb   # Phase 1 & 2: EDA + RoBERTa sentiment classifier
 ├── Clustering_ProjectNLPLLM.ipynb                   # Phase 3: Unsupervised topic clustering
 ├── Summarization_Final.ipynb                        # Phase 4: Abstractive summarisation pipeline
